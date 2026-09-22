@@ -243,6 +243,65 @@
   .card h3{ font-family:'VT323'; font-size: 24px; color: var(--text); margin: 0 0 8px; letter-spacing:1px; }
   .card p{ color: var(--text-dim); font-size: 19px; margin:0; }
 
+  /* ---------- RANK / HIERARCHY PANEL ---------- */
+  .rank-list{ display:flex; flex-direction:column; gap: 22px; }
+  .rank-section{ padding: 18px 20px 20px; }
+  .rank-head{
+    display:flex; align-items:baseline; flex-wrap:wrap;
+    gap: 10px 16px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px dashed var(--border);
+  }
+  .rank-title{
+    font-family:'Press Start 2P';
+    font-size: 15px;
+    color: var(--gold);
+    letter-spacing: 1px;
+  }
+  .rank-jp{
+    font-family:'VT323';
+    font-size: 20px;
+    color: var(--cyan);
+    margin-left: 8px;
+  }
+  .rank-desc{
+    flex: 1;
+    min-width: 160px;
+    color: var(--text-dim);
+    font-size: 18px;
+  }
+  .rank-count{
+    font-family:'Press Start 2P';
+    font-size: 12px;
+    color: var(--ember);
+    white-space: nowrap;
+  }
+  .rank-empty{
+    color: var(--text-dim);
+    font-size: 18px;
+    font-style: italic;
+  }
+  .member-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(52px, 1fr));
+    gap: 12px;
+  }
+  .member-slot{
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .member-placeholder{
+    width: 48px;
+    height: 68px;
+    border: 2px dashed var(--border);
+    background: var(--panel-2);
+    display:flex; align-items:center; justify-content:center;
+    color: var(--text-dim);
+    font-family:'Press Start 2P';
+    font-size: 10px;
+    image-rendering: pixelated;
+  }
+
   /* ---------- EVENTS PANEL ---------- */
   .event-list{ display:flex; flex-direction:column; gap: 10px; max-height: 55vh; overflow-y:auto; padding-right: 6px; }
   .event-list::-webkit-scrollbar{ width: 6px; }
@@ -373,12 +432,12 @@
       <span>HORNTAIL</span>
     </div>
     <div class="tabs">
-      <button class="tab-btn" data-tab="join">Join</button>
+      <button class="tab-btn active" data-tab="join">Join</button>
       <button class="tab-btn" data-tab="bosstimer">Boss Timer</button>
       <button class="tab-btn" data-tab="twitch">Twitch</button>
       <button class="tab-btn" data-tab="members">Members</button>
       <button class="tab-btn" data-tab="events">Events</button>
-      <button class="tab-btn active" data-tab="guides">Guides</button>
+      <button class="tab-btn" data-tab="guides">Guides</button>
       <button class="tab-btn" data-tab="contact">Contact</button>
     </div>
   </nav>
@@ -394,7 +453,7 @@
     </div>
 
     <!-- JOIN / HOME PANEL -->
-    <div class="panel" id="panel-join">
+    <div class="panel active" id="panel-join">
       <div class="home-panel">
         <img class="home-logo" src="images/horntail_logo.png" alt="Horntail">
         <div class="home-eyebrow">MapleStory Classic</div>
@@ -437,25 +496,9 @@
 
     <!-- MEMBERS PANEL -->
     <div class="panel" id="panel-members">
-      <div class="section-tag">What we do</div>
-      <h2 class="section-title">Activity every week</h2>
-      <div class="card-grid">
-        <div class="card pixel-frame">
-          <div class="card-icon">H</div>
-          <h3>Bossing</h3>
-          <p>Weekly Horntail, Zakum, and Pink Bean runs — first-timers welcome, patient explanations included.</p>
-        </div>
-        <div class="card pixel-frame">
-          <div class="card-icon">P</div>
-          <h3>Parties &amp; Quests</h3>
-          <p>Shared training parties and PQ nights across Kerning, Ludi, and Ellin Forest. Nobody levels alone.</p>
-        </div>
-        <div class="card pixel-frame">
-          <div class="card-icon">✦</div>
-          <h3>Community</h3>
-          <p>An active Discord, screenshot contests, and impromptu events whenever someone has a good reason to gather.</p>
-        </div>
-      </div>
+      <div class="section-tag">Chain of command</div>
+      <h2 class="section-title">Guild Hierarchy</h2>
+      <div class="rank-list" id="rank-list"><!-- populated by JS --></div>
     </div>
 
     <!-- EVENTS PANEL -->
@@ -480,7 +523,7 @@
     </div>
 
     <!-- GUIDES PANEL -->
-    <div class="panel active" id="panel-guides">
+    <div class="panel" id="panel-guides">
       <div class="section-tag">Getting started</div>
       <h2 class="section-title">Guides</h2>
       <div class="guide-list">
@@ -496,7 +539,7 @@
       <div class="contact-panel">
         <div class="section-tag">Get in touch</div>
         <h2 class="section-title">Talk to the Guild</h2>
-        <p>Questions about joining, events, or anything else — reach out on Discord and message a guild leader directly.</p>
+        <p>Message a guild leader directly on Discord.</p>
         <div class="contact-actions">
           <a class="btn btn-primary" href="https://discord.gg/ZKdcNMA3xY" target="_blank" rel="noopener">Open Discord</a>
           <a class="btn btn-ghost" href="https://discordapp.com/users/240PR" target="_blank" rel="noopener">Message a Guild Leader</a>
@@ -714,6 +757,58 @@
   buildBossList();
   tickAllChannels();
   setInterval(tickAllChannels, 1000);
+
+  /* ---------- RANK HIERARCHY ---------- */
+  const RANKS = [
+    { title: 'GM', jp: '団長', desc: 'Guild Leader', count: 1 },
+    { title: 'JR. MASTER', jp: '副長', desc: 'Second in Command', count: 2 },
+    { title: 'VIP', jp: '特別', desc: 'Special', count: 0, emptyText: 'No VIPs' },
+    { title: 'FAME 200', jp: '', desc: 'Reach Server Level 200', count: 0, emptyText: 'No FAMEs' },
+    { title: 'ELITE', jp: '古参', desc: 'Trusted Long-Time Member', count: 0, emptyText: 'No ELITEs' },
+    { title: 'SQUAD LEADER', jp: '隊長', desc: 'Squad Leader', count: 2 },
+    { title: 'MEMBER', jp: '団員', desc: 'Member', count: 35 }
+  ];
+
+  function buildRankList(){
+    const root = document.getElementById('rank-list');
+    if (!root) return;
+    root.innerHTML = '';
+
+    RANKS.forEach(rank => {
+      const section = document.createElement('div');
+      section.className = 'rank-section pixel-frame';
+
+      const head = document.createElement('div');
+      head.className = 'rank-head';
+      head.innerHTML = `
+        <div class="rank-title">${rank.title}${rank.jp ? `<span class="rank-jp">${rank.jp}</span>` : ''}</div>
+        <div class="rank-desc">${rank.desc}</div>
+        <div class="rank-count">x${rank.count}</div>
+      `;
+      section.appendChild(head);
+
+      if (rank.count > 0){
+        const grid = document.createElement('div');
+        grid.className = 'member-grid';
+        for (let i = 0; i < rank.count; i++){
+          const slot = document.createElement('div');
+          slot.className = 'member-slot';
+          slot.innerHTML = `<div class="member-placeholder">?</div>`;
+          grid.appendChild(slot);
+        }
+        section.appendChild(grid);
+      } else {
+        const empty = document.createElement('p');
+        empty.className = 'rank-empty';
+        empty.textContent = rank.emptyText || 'None currently';
+        section.appendChild(empty);
+      }
+
+      root.appendChild(section);
+    });
+  }
+
+  buildRankList();
 
   /* ---------- TWITCH EMBED (dynamic parent) ---------- */
   (function(){
