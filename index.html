@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -368,7 +369,7 @@
   <div class="spark" style="left:50%; top:85%; animation-delay:2.1s;"></div>
 
   <nav class="nav">
-    <div class="nav-brand">
+    <div class="nav-brand" data-tab-link="join" style="cursor:pointer;">
       <img src="images/horntail_emblem.png" alt="Horntail guild logo">
       <span>HORNTAIL</span>
     </div>
@@ -431,15 +432,7 @@
       <h2 class="section-title">Watch the Guild on Twitch</h2>
       <div class="twitch-frame pixel-frame">
         <p>Catch boss runs, PQs, and guild events live.</p>
-        <div class="twitch-embed pixel-frame">
-          <iframe
-            src="https://player.twitch.tv/?channel=240pr&parent=YOUR-DOMAIN-HERE&muted=true"
-            height="100%"
-            width="100%"
-            allowfullscreen="true"
-            frameborder="0">
-          </iframe>
-        </div>
+        <div class="twitch-embed pixel-frame" id="twitch-embed-container"></div>
       </div>
     </div>
 
@@ -523,7 +516,7 @@
   </div>
 
   <footer>
-    <div class="footer-brand">
+    <div class="footer-brand" data-tab-link="join" style="cursor:pointer;">
       <img src="images/horntail_emblem.png" alt="Horntail guild logo">
       <span>Horntail Guild</span>
     </div>
@@ -730,6 +723,21 @@
   buildBossList();
   tickAllChannels();
   setInterval(tickAllChannels, 1000);
+
+  /* ---------- TWITCH EMBED (dynamic parent) ---------- */
+  (function(){
+    const container = document.getElementById('twitch-embed-container');
+    if (container){
+      const host = window.location.hostname || 'localhost';
+      const iframe = document.createElement('iframe');
+      iframe.src = `https://player.twitch.tv/?channel=240pr&parent=${host}&muted=true`;
+      iframe.height = '100%';
+      iframe.width = '100%';
+      iframe.allowFullscreen = true;
+      iframe.frameBorder = '0';
+      container.appendChild(iframe);
+    }
+  })();
 
   const tabs = document.querySelectorAll('.tab-btn');
   const panels = document.querySelectorAll('.panel');
