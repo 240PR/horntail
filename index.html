@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Horntail — MapleStory Classic Guild</title>
+<link rel="icon" href="images/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg: #070a13;
+    --bg-deep: #04060c;
+    --panel: #0d1526;
+    --panel-2: #101b30;
+    --border: #22314f;
+    --cyan: #5be7ff;
+    --cyan-dim: #1f6f88;
+    --ember: #d98a52;
+    --ember-dim: #6e4526;
+    --gold: #f2c94c;
+    --text: #e8eef7;
+    --text-dim: #8b98b3;
+  }
+
+  *{ box-sizing: border-box; }
+
+  html, body{
+    margin:0;
+    height:100%;
+    overflow:hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'VT323', monospace;
+    font-size: 21px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, .pixel-display{
+    font-family: 'Press Start 2P', monospace;
+    line-height: 1.5;
+    letter-spacing: 0.5px;
+  }
+
+  a{ color: inherit; text-decoration: none; }
+  img{ max-width: 100%; display:block; }
+  ::selection{ background: var(--cyan); color: #041018; }
+
+  .pixel-frame{
+    position: relative;
+    border: 3px solid var(--border);
+    background: var(--panel);
+  }
+  .pixel-frame::before, .pixel-frame::after{
+    content:"";
+    position:absolute;
+    width:10px; height:10px;
+    background: var(--cyan);
+  }
+  .pixel-frame::before{ top:-3px; left:-3px; }
+  .pixel-frame::after{ bottom:-3px; right:-3px; }
+
+  /* ---------- HERO (whole page) ---------- */
+  .hero{
+    position: relative;
+    height: 100svh;
+    width: 100%;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .hero-bg{
+    position:absolute; inset:0;
+    background-image: url('images/hero-bg.jpg');
+    background-size: cover;
+    background-position: center 60%;
+    filter: saturate(0.85) brightness(0.5);
+  }
+  .hero-veil{
+    position:absolute; inset:0;
+    background:
+      radial-gradient(ellipse at 50% 30%, rgba(7,10,19,0.1) 0%, rgba(4,6,12,0.9) 72%),
+      linear-gradient(180deg, rgba(4,6,12,0.55) 0%, rgba(4,6,12,0.35) 40%, var(--bg-deep) 100%);
+  }
+  .scanlines{
+    position:absolute; inset:0;
+    background: repeating-linear-gradient(
+      0deg, rgba(0,0,0,0.16) 0px, rgba(0,0,0,0.16) 1px,
+      transparent 1px, transparent 3px
+    );
+    mix-blend-mode: overlay;
+    opacity:0.5;
+    pointer-events:none;
+  }
+
+  /* floating pixel sparkles */
+  .spark{
+    position:absolute;
+    width:6px; height:6px;
+    background: var(--cyan);
+    box-shadow: 0 0 6px var(--cyan);
+    opacity:0.85;
+    animation: drift 7s linear infinite;
+  }
+  .spark.ember{ background: var(--ember); box-shadow:0 0 6px var(--ember); }
+  .spark.gold{ background: var(--gold); box-shadow:0 0 6px var(--gold); }
+  @keyframes drift{
+    0%{ transform: translateY(0) translateX(0); opacity:0; }
+    10%{ opacity:0.9; }
+    50%{ transform: translateY(-40px) translateX(10px); }
+    90%{ opacity:0.9; }
+    100%{ transform: translateY(-90px) translateX(-6px); opacity:0; }
+  }
+
+  /* ---------- NAV / TABS ---------- */
+  .nav{
+    position: relative; z-index: 20;
+    display:flex; align-items:center; justify-content:space-between;
+    padding: 16px 5vw;
+    background: rgba(4,6,12,0.75);
+    backdrop-filter: blur(6px);
+    border-bottom: 2px solid var(--border);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .nav-brand{ display:flex; align-items:center; gap:12px; }
+  .nav-brand img{ width:32px; height:32px; image-rendering: pixelated; }
+  .nav-brand span{ font-size: 22px; letter-spacing: 2px; color: var(--cyan); }
+
+  .tabs{ display:flex; gap: 8px; flex-wrap: wrap; }
+  .tab-btn{
+    font-family:'VT323', monospace;
+    font-size: 19px;
+    color: var(--text-dim);
+    background: transparent;
+    border: 2px solid var(--border);
+    padding: 8px 16px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.1s steps(1);
+  }
+  .tab-btn:hover{ color: var(--text); border-color: var(--cyan-dim); }
+  .tab-btn.active{
+    color: var(--bg-deep);
+    background: var(--cyan);
+    border-color: var(--cyan);
+    box-shadow: 3px 3px 0 var(--cyan-dim);
+  }
+
+  /* ---------- STAGE (tab content area) ---------- */
+  .stage{
+    position: relative; z-index: 10;
+    flex: 1;
+    overflow-y: auto;
+    display:flex;
+    align-items: flex-start;
+    align-items: safe center;
+    justify-content: center;
+    padding: 30px 6vw 40px;
+  }
+  .stage::-webkit-scrollbar{ width: 8px; }
+  .stage::-webkit-scrollbar-thumb{ background: var(--border); }
+
+  .panel{
+    display:none;
+    width:100%;
+    max-width: 1080px;
+    margin: 0 auto;
+    animation: fadeUp 0.35s steps(6) both;
+  }
+  .panel.active{ display:block; }
+  @keyframes fadeUp{
+    0%{ opacity:0; transform: translateY(14px); }
+    100%{ opacity:1; transform: translateY(0); }
+  }
+
+  .section-tag{ color: var(--ember); font-size: 17px; margin-bottom: 8px; letter-spacing:2px; }
+  .section-title{ font-size: clamp(22px, 3.6vw, 32px); color: var(--text); margin: 0 0 18px; }
+
+  /* ---------- HOME / JOIN PANEL ---------- */
+  .home-panel{ text-align:center; }
+  .home-logo{
+    width: min(220px, 46vw);
+    margin: 0 auto 10px;
+    filter: drop-shadow(0 0 22px rgba(91,231,255,0.3));
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float{
+    0%,100%{ transform: translateY(0); }
+    50%{ transform: translateY(-10px); }
+  }
+  .home-eyebrow{ color: var(--ember); font-size: 17px; letter-spacing:3px; margin-bottom: 10px;}
+  .home-title{ font-size: clamp(32px, 7vw, 60px); margin: 8px 0; color: #ffffff; text-shadow: 0 0 20px rgba(91,231,255,0.35), 4px 4px 0 rgba(0,0,0,0.6); }
+  .home-title span{ color: #ffffff; }
+  .home-sub{ max-width: 560px; margin: 12px auto 26px; color: var(--text-dim); font-size: 22px; }
+
+  .btn{
+    font-family:'VT323', monospace;
+    font-size: 21px;
+    padding: 12px 26px;
+    border: 2px solid var(--cyan);
+    cursor:pointer;
+    display:inline-block;
+    transition: transform 0.06s steps(1);
+  }
+  .btn-primary{ background: var(--cyan); color: var(--bg-deep); box-shadow: 4px 4px 0 var(--cyan-dim); }
+  .btn-primary:hover{ transform: translate(2px,2px); box-shadow: 2px 2px 0 var(--cyan-dim); }
+  .btn-ghost{ background: transparent; color: var(--cyan); box-shadow: 4px 4px 0 rgba(91,231,255,0.25); }
+  .btn-ghost:hover{ transform: translate(2px,2px); box-shadow: 2px 2px 0 rgba(91,231,255,0.25); }
+  .home-actions{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-bottom: 30px;}
+
+  .stats-grid{ display:grid; grid-template-columns: repeat(4,1fr); gap: 16px; max-width: 640px; margin: 0 auto; }
+  .stat-box{ padding: 16px 8px; text-align:center; }
+  .stat-value{ font-family:'Press Start 2P'; font-size: 18px; color: var(--gold); margin-bottom: 8px; }
+  .stat-label{ color: var(--text-dim); font-size: 16px; }
+
+  /* ---------- TWITCH PANEL ---------- */
+  .twitch-frame{
+    padding: 40px 30px;
+    text-align:center;
+  }
+  .twitch-embed{
+    width: 100%;
+    max-width: 640px;
+    aspect-ratio: 16/9;
+    margin: 20px auto 0;
+    display:flex; align-items:center; justify-content:center;
+    color: var(--text-dim);
+    font-size: 18px;
+  }
+
+  /* ---------- MEMBERS PANEL ---------- */
+  .card-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .card{ padding: 24px 20px; }
+  .card-icon{
+    width: 40px; height: 40px; margin-bottom: 14px;
+    border: 2px solid var(--cyan);
+    display:flex; align-items:center; justify-content:center;
+    color: var(--cyan); font-family:'Press Start 2P'; font-size:14px;
+  }
+  .card h3{ font-family:'VT323'; font-size: 24px; color: var(--text); margin: 0 0 8px; letter-spacing:1px; }
+  .card p{ color: var(--text-dim); font-size: 19px; margin:0; }
+
+  /* ---------- EVENTS PANEL ---------- */
+  .event-list{ display:flex; flex-direction:column; gap: 10px; max-height: 55vh; overflow-y:auto; padding-right: 6px; }
+  .event-list::-webkit-scrollbar{ width: 6px; }
+  .event-list::-webkit-scrollbar-thumb{ background: var(--border); }
+  .event-row{
+    display:flex; align-items:center; gap: 16px;
+    padding: 12px 16px;
+  }
+  .event-date{
+    font-family:'Press Start 2P';
+    font-size: 12px;
+    color: var(--gold);
+    flex: 0 0 90px;
+  }
+  .event-text{ color: var(--text); font-size: 19px; }
+  .event-text a{ color: var(--cyan); border-bottom: 1px dotted var(--cyan-dim); }
+
+  /* ---------- GUIDES PANEL ---------- */
+  .guide-list{ display:flex; flex-direction:column; gap: 14px; }
+  .guide-row{ padding: 18px 20px; }
+  .guide-row h3{ font-size: 22px; color:var(--cyan); margin:0 0 6px; font-family:'VT323'; }
+  .guide-row p{ margin:0; color: var(--text-dim); font-size: 19px; }
+
+  /* ---------- CONTACT PANEL ---------- */
+  .contact-panel{ text-align:center; }
+  .contact-panel p{ color: var(--text-dim); font-size: 21px; max-width: 520px; margin: 10px auto 24px; }
+  .contact-actions{ display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+
+  footer{
+    position: relative; z-index: 20;
+    padding: 14px 5vw;
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    background: var(--bg-deep);
+    border-top: 2px solid var(--border);
+    color: var(--text-dim);
+    font-size: 16px;
+  }
+  .footer-brand{ display:flex; align-items:center; gap:8px; }
+  .footer-brand img{ width:18px; height:18px; image-rendering:pixelated; }
+
+  /* ---------- BOSS TIMER PANEL ---------- */
+  .bosstimer-intro{ color: var(--text-dim); font-size: 19px; max-width: 720px; margin: 0 0 24px; }
+  .boss-list{ display:flex; flex-direction:column; gap: 28px; }
+  .boss-card{ padding: 18px 20px 22px; }
+  .boss-head{ display:flex; align-items:center; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .boss-portrait{
+    width: 72px; height: 72px;
+    flex: 0 0 72px;
+    border: 2px solid var(--border);
+    background: var(--panel-2);
+    display:flex; align-items:center; justify-content:center;
+    color: var(--text-dim);
+    font-size: 12px;
+    text-align:center;
+    overflow:hidden;
+  }
+  .boss-portrait img{ width:100%; height:100%; object-fit: contain; image-rendering: pixelated; }
+  .boss-info{ flex: 1; min-width: 180px; }
+  .boss-name{ font-family:'VT323'; font-size: 26px; color: var(--text); letter-spacing: 1px; }
+  .boss-name .boss-lv{ color: var(--gold); font-size: 17px; margin-left: 8px; }
+  .boss-respawn{ color: var(--ember); font-size: 17px; margin-top: 2px; }
+  .boss-note{ color: var(--text-dim); font-size: 16px; margin: 10px 0 0; max-width: 640px; }
+
+  .channel-grid{
+    display:grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 10px;
+  }
+  .channel-card{
+    border: 2px solid var(--border);
+    background: var(--panel-2);
+    padding: 10px 12px;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .channel-card.ready{ border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold) inset; }
+  .channel-card.soon{ border-color: var(--cyan-dim); }
+  .channel-label{ font-family:'Press Start 2P'; font-size: 11px; color: var(--cyan); }
+  .channel-time{ font-size: 20px; color: var(--text); line-height:1.2; }
+  .channel-time.ready-text{ color: var(--gold); }
+  .channel-sub{ font-size: 14px; color: var(--text-dim); }
+  .btn-mini{
+    font-family:'VT323', monospace;
+    font-size: 16px;
+    padding: 5px 10px;
+    border: 2px solid var(--cyan-dim);
+    background: transparent;
+    color: var(--cyan);
+    cursor:pointer;
+    align-self: flex-start;
+  }
+  .btn-mini:hover{ background: var(--cyan-dim); color: var(--text); }
+  .btn-mini.reset{ border-color: var(--ember-dim); color: var(--ember); }
+  .btn-mini.reset:hover{ background: var(--ember-dim); color: var(--text); }
+
+  @media (max-width: 860px){
+    .stats-grid{ grid-template-columns: repeat(2,1fr); }
+    .card-grid{ grid-template-columns: 1fr; }
+    .tabs{ justify-content:center; width:100%; }
+    .nav{ justify-content:center; }
+    .channel-grid{ grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
+  }
+
+  @media (prefers-reduced-motion: reduce){
+    .home-logo{ animation: none; }
+    .spark{ animation: none; opacity: 0.4; }
+  }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-veil"></div>
+  <div class="scanlines"></div>
+
+  <!-- decorative floating pixel sparkles -->
+  <div class="spark" style="left:8%; top:70%; animation-delay:0s;"></div>
+  <div class="spark ember" style="left:20%; top:80%; animation-delay:1.2s;"></div>
+  <div class="spark gold" style="left:35%; top:65%; animation-delay:2.4s;"></div>
+  <div class="spark" style="left:60%; top:75%; animation-delay:0.6s;"></div>
+  <div class="spark ember" style="left:75%; top:60%; animation-delay:1.8s;"></div>
+  <div class="spark gold" style="left:88%; top:78%; animation-delay:3s;"></div>
+  <div class="spark" style="left:50%; top:85%; animation-delay:2.1s;"></div>
+
+  <nav class="nav">
+    <div class="nav-brand">
+      <img src="images/logo.png" alt="Horntail guild logo">
+      <span>HORNTAIL</span>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="join">Join</button>
+      <button class="tab-btn" data-tab="bosstimer">Boss Timer</button>
+      <button class="tab-btn" data-tab="twitch">Twitch</button>
+      <button class="tab-btn" data-tab="members">Members</button>
+      <button class="tab-btn" data-tab="events">Events</button>
+      <button class="tab-btn" data-tab="guides">Guides</button>
+      <button class="tab-btn" data-tab="contact">Contact</button>
+    </div>
+  </nav>
+
+  <div class="stage">
+
+    <!-- BOSS TIMER PANEL -->
+    <div class="panel" id="panel-bosstimer">
+      <div class="section-tag">Track your camps</div>
+      <h2 class="section-title">Boss Timer</h2>
+      <p class="bosstimer-intro">World bosses currently in MapleStory Classic.</p>
+      <div class="boss-list" id="boss-list"><!-- populated by JS --></div>
+    </div>
+
+    <!-- JOIN / HOME PANEL -->
+    <div class="panel active" id="panel-join">
+      <div class="home-panel">
+        <img class="home-logo" src="images/horntail.png" alt="Horntail">
+        <div class="home-eyebrow">MapleStory Classic</div>
+        <h1 class="home-title">HORNT<span>AIL</span></h1>
+        <p class="home-sub">A three-headed guild for old-school Maple fans, new and old. We boss, we quest, and nobody grinds alone.</p>
+        <div class="home-actions">
+          <a class="btn btn-primary" href="#" target="_blank" rel="noopener">Join the Discord</a>
+          <a class="btn btn-ghost" data-tab-link="contact" href="#">Contact a Guild Leader</a>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-box pixel-frame">
+            <div class="stat-value">S</div>
+            <div class="stat-label">Guild Tier</div>
+          </div>
+          <div class="stat-box pixel-frame">
+            <div class="stat-value">30+</div>
+            <div class="stat-label">Members</div>
+          </div>
+          <div class="stat-box pixel-frame">
+            <div class="stat-value">EU/NA</div>
+            <div class="stat-label">Region</div>
+          </div>
+          <div class="stat-box pixel-frame">
+            <div class="stat-value">2026</div>
+            <div class="stat-label">Founded</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TWITCH PANEL -->
+    <div class="panel" id="panel-twitch">
+      <div class="section-tag">Live</div>
+      <h2 class="section-title">Watch the Guild on Twitch</h2>
+      <div class="twitch-frame pixel-frame">
+        <p>Catch boss runs, PQs, and guild events live.</p>
+        <div class="twitch-embed pixel-frame">Twitch player goes here</div>
+      </div>
+    </div>
+
+    <!-- MEMBERS PANEL -->
+    <div class="panel" id="panel-members">
+      <div class="section-tag">What we do</div>
+      <h2 class="section-title">Activity every week</h2>
+      <div class="card-grid">
+        <div class="card pixel-frame">
+          <div class="card-icon">H</div>
+          <h3>Bossing</h3>
+          <p>Weekly Horntail, Zakum, and Pink Bean runs — first-timers welcome, patient explanations included.</p>
+        </div>
+        <div class="card pixel-frame">
+          <div class="card-icon">P</div>
+          <h3>Parties &amp; Quests</h3>
+          <p>Shared training parties and PQ nights across Kerning, Ludi, and Ellin Forest. Nobody levels alone.</p>
+        </div>
+        <div class="card pixel-frame">
+          <div class="card-icon">✦</div>
+          <h3>Community</h3>
+          <p>An active Discord, screenshot contests, and impromptu events whenever someone has a good reason to gather.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- EVENTS PANEL -->
+    <div class="panel" id="panel-events">
+      <div class="section-tag">What's coming</div>
+      <h2 class="section-title">Guild Events</h2>
+      <div class="event-list">
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">Guild discount poll (read more in <a href="#">#ⓗ-market</a>)</span></div>
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">Gathering to discuss launch day party + activities</span></div>
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">Guild screenshot / group photo event</span></div>
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">Recruit-a-friend challenge + reward</span></div>
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">First guild boss run (Mushmom / Zombie Mushmom, lol)</span></div>
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">First planned guild PQ</span></div>
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">First guild giveaway</span></div>
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">Highest-level Discord badge</span></div>
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">Fashion / cosmetic contest for a special Discord rank</span></div>
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">Guild crafting day (farming resources together)</span></div>
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">Milestone giveaway</span></div>
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">Guild lottery</span></div>
+        <div class="event-row pixel-frame"><span class="event-date">TBA</span><span class="event-text">Hide 'n seek with a reward</span></div>
+      </div>
+    </div>
+
+    <!-- GUIDES PANEL -->
+    <div class="panel" id="panel-guides">
+      <div class="section-tag">Getting started</div>
+      <h2 class="section-title">Guides</h2>
+      <div class="guide-list">
+        <div class="guide-row pixel-frame">
+          <h3>New Member Basics</h3>
+          <p>How to set up your character, link your Discord, and find your first party.</p>
+        </div>
+        <div class="guide-row pixel-frame">
+          <h3>Boss Run Etiquette</h3>
+          <p>What to bring, how loot is split, and how to sign up for a run.</p>
+        </div>
+        <div class="guide-row pixel-frame">
+          <h3>Leveling Routes</h3>
+          <p>Recommended training spots and PQs by level range.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACT PANEL -->
+    <div class="panel" id="panel-contact">
+      <div class="contact-panel">
+        <div class="section-tag">Get in touch</div>
+        <h2 class="section-title">Talk to the Guild</h2>
+        <p>Questions about joining, events, or anything else — reach out on Discord or message a guild leader directly.</p>
+        <div class="contact-actions">
+          <a class="btn btn-primary" href="#" target="_blank" rel="noopener">Open Discord</a>
+          <a class="btn btn-ghost" href="#">Message a Guild Leader</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>
+    <div class="footer-brand">
+      <img src="images/logo.png" alt="Horntail guild logo">
+      <span>Horntail Guild</span>
+    </div>
+    <div>MapleStory Classic</div>
+  </footer>
+</div>
+
+<script>
+  /* ---------- BOSS TIMER ---------- */
+  const CHANNEL_COUNT = 20;
+  const BOSSES = [
+    {
+      id: 'mano',
+      name: 'Mano',
+      level: 20,
+      img: 'images/bosses/mano.png',
+      minMin: 60,
+      maxMin: 90,
+      respawnText: 'Respawns every 1 to 1.5 hours',
+      map: 'Thicket Around the Beach III',
+      summonOnly: false
+    },
+    {
+      id: 'kingslime',
+      name: 'King Slime',
+      level: 32,
+      img: 'images/bosses/king-slime.png',
+      minMin: null,
+      maxMin: null,
+      respawnText: 'Summoned boss &mdash; no field respawn timer',
+      map: '1st Accompaniment <Last Stage> (Kerning City Party Quest)',
+      summonOnly: true
+    },
+    {
+      id: 'mushmom',
+      name: 'Mushmom',
+      level: 40,
+      img: 'images/bosses/mushmom.png',
+      minMin: 60,
+      maxMin: 90,
+      respawnText: 'Respawns every 1 to 1.5 hours',
+      map: "Someone Else's House",
+      summonOnly: false
+    },
+    {
+      id: 'zombiemushmom',
+      name: 'Zombie Mushmom',
+      level: 50,
+      img: 'images/bosses/zombie-mushmom.png',
+      minMin: 60,
+      maxMin: 90,
+      respawnText: 'Respawns every 1 to 1.5 hours',
+      map: 'The Grave of Mushmom',
+      summonOnly: false
+    },
+    {
+      id: 'rottenmushmom',
+      name: 'Rotten Mushmom',
+      level: 60,
+      img: 'images/bosses/rotten-mushmom.png',
+      minMin: 60,
+      maxMin: 90,
+      respawnText: 'Respawns every 1 to 1.5 hours',
+      map: "Someone Else's Grave",
+      summonOnly: false
+    },
+    {
+      id: 'jrbalrog',
+      name: 'Jr. Balrog',
+      level: 80,
+      img: 'images/bosses/jr-balrog.png',
+      minMin: 180,
+      maxMin: 180,
+      respawnText: 'Respawns about every 3 hours',
+      map: 'The Cursed Sanctuary',
+      summonOnly: false
+    }
+  ];
+
+  const STORAGE_PREFIX = 'horntail_bosstimer_';
+
+  function storageKey(bossId, ch){
+    return STORAGE_PREFIX + bossId + '_ch' + ch;
+  }
+
+  function fmtDuration(ms){
+    const sign = ms < 0 ? '-' : '';
+    let s = Math.floor(Math.abs(ms) / 1000);
+    const h = Math.floor(s / 3600); s -= h * 3600;
+    const m = Math.floor(s / 60); s -= m * 60;
+    const pad = n => String(n).padStart(2, '0');
+    return sign + (h > 0 ? h + ':' + pad(m) + ':' + pad(s) : m + ':' + pad(s));
+  }
+
+  function buildBossList(){
+    const root = document.getElementById('boss-list');
+    root.innerHTML = '';
+
+    BOSSES.forEach(boss => {
+      const card = document.createElement('div');
+      card.className = 'boss-card pixel-frame';
+
+      const head = document.createElement('div');
+      head.className = 'boss-head';
+      head.innerHTML = `
+        <div class="boss-portrait">${boss.img ? `<img src="${boss.img}" alt="${boss.name}" onerror="this.parentElement.textContent='${boss.name}';">` : boss.name}</div>
+        <div class="boss-info">
+          <div class="boss-name">${boss.name}<span class="boss-lv">Lv. ${boss.level}</span></div>
+          <div class="boss-respawn">${boss.respawnText}</div>
+        </div>
+      `;
+      card.appendChild(head);
+
+      if (boss.map){
+        const mapLine = document.createElement('p');
+        mapLine.className = 'boss-note';
+        mapLine.innerHTML = 'Map: ' + boss.map;
+        card.appendChild(mapLine);
+      }
+
+      if (!boss.summonOnly){
+        const grid = document.createElement('div');
+        grid.className = 'channel-grid';
+        for (let ch = 1; ch <= CHANNEL_COUNT; ch++){
+          const cell = document.createElement('div');
+          cell.className = 'channel-card';
+          cell.dataset.boss = boss.id;
+          cell.dataset.channel = ch;
+          cell.dataset.min = boss.minMin;
+          cell.dataset.max = boss.maxMin;
+          cell.innerHTML = `
+            <div class="channel-label">CH ${ch}</div>
+            <div class="channel-time">--:--</div>
+            <div class="channel-sub"></div>
+            <div style="display:flex; gap:6px;">
+              <button class="btn-mini start">Start</button>
+              <button class="btn-mini reset">Reset</button>
+            </div>
+          `;
+          grid.appendChild(cell);
+          cell.querySelector('.start').addEventListener('click', () => {
+            localStorage.setItem(storageKey(boss.id, ch), String(Date.now()));
+            updateChannelCell(cell);
+          });
+          cell.querySelector('.reset').addEventListener('click', () => {
+            localStorage.removeItem(storageKey(boss.id, ch));
+            updateChannelCell(cell);
+          });
+        }
+        card.appendChild(grid);
+      }
+
+      root.appendChild(card);
+    });
+  }
+
+  function updateChannelCell(cell){
+    const bossId = cell.dataset.boss;
+    const ch = cell.dataset.channel;
+    const minMin = Number(cell.dataset.min);
+    const maxMin = Number(cell.dataset.max);
+    const killedAt = localStorage.getItem(storageKey(bossId, ch));
+    const timeEl = cell.querySelector('.channel-time');
+    const subEl = cell.querySelector('.channel-sub');
+
+    if (!killedAt){
+      cell.classList.remove('ready', 'soon');
+      timeEl.classList.remove('ready-text');
+      timeEl.textContent = '--:--';
+      subEl.textContent = 'Not tracked';
+      return;
+    }
+
+    const killedMs = Number(killedAt);
+    const now = Date.now();
+    const earliest = killedMs + minMin * 60000;
+    const latest = killedMs + maxMin * 60000;
+
+    if (now < earliest){
+      cell.classList.remove('ready');
+      cell.classList.add('soon');
+      timeEl.classList.remove('ready-text');
+      timeEl.textContent = fmtDuration(earliest - now);
+      subEl.textContent = 'until earliest spawn';
+    } else if (now < latest){
+      cell.classList.add('ready');
+      cell.classList.remove('soon');
+      timeEl.classList.add('ready-text');
+      timeEl.textContent = 'Maybe up!';
+      subEl.textContent = 'latest in ' + fmtDuration(latest - now);
+    } else {
+      cell.classList.add('ready');
+      cell.classList.remove('soon');
+      timeEl.classList.add('ready-text');
+      timeEl.textContent = 'Should be up';
+      subEl.textContent = 'overdue ' + fmtDuration(now - latest);
+    }
+  }
+
+  function tickAllChannels(){
+    document.querySelectorAll('.channel-card').forEach(updateChannelCell);
+  }
+
+  buildBossList();
+  tickAllChannels();
+  setInterval(tickAllChannels, 1000);
+
+  const tabs = document.querySelectorAll('.tab-btn');
+  const panels = document.querySelectorAll('.panel');
+
+  function activateTab(name){
+    tabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    panels.forEach(p => p.classList.toggle('active', p.id === 'panel-' + name));
+    document.querySelector('.stage').scrollTop = 0;
+  }
+
+  tabs.forEach(btn => {
+    btn.addEventListener('click', () => activateTab(btn.dataset.tab));
+  });
+
+  document.querySelectorAll('[data-tab-link]').forEach(link => {
+    link.addEventListener('click', (e) => {
+      e.preventDefault();
+      activateTab(link.dataset.tabLink);
+    });
+  });
+</script>
+
+</body>
+</html>
