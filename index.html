@@ -631,6 +631,33 @@
   ];
 
   const STORAGE_PREFIX = 'horntail_bosstimer_';
+  const AUTH_FLAG = 'horntail_boss_auth';
+
+  async function checkBossPassword(){
+    if (sessionStorage.getItem(AUTH_FLAG) === 'ok') return true;
+
+    const pw = prompt('Anna salasana bossitimerin muokkaamiseen:');
+    if (pw === null) return false;
+
+    try {
+      const res = await fetch('/api/verify-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw })
+      });
+      const data = await res.json();
+
+      if (res.ok && data.ok){
+        sessionStorage.setItem(AUTH_FLAG, 'ok');
+        return true;
+      }
+      alert('Väärä salasana.');
+      return false;
+    } catch (err){
+      alert('Salasanan tarkistus epäonnistui. Yritä uudelleen.');
+      return false;
+    }
+  }
 
   function storageKey(bossId, ch){
     return STORAGE_PREFIX + bossId + '_ch' + ch;
@@ -691,11 +718,13 @@
             </div>
           `;
           grid.appendChild(cell);
-          cell.querySelector('.start').addEventListener('click', () => {
+          cell.querySelector('.start').addEventListener('click', async () => {
+            if (!(await checkBossPassword())) return;
             localStorage.setItem(storageKey(boss.id, ch), String(Date.now()));
             updateChannelCell(cell);
           });
-          cell.querySelector('.reset').addEventListener('click', () => {
+          cell.querySelector('.reset').addEventListener('click', async () => {
+            if (!(await checkBossPassword())) return;
             localStorage.removeItem(storageKey(boss.id, ch));
             updateChannelCell(cell);
           });
