@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -719,6 +721,7 @@
           `;
           grid.appendChild(cell);
           cell.querySelector('.start').addEventListener('click', async () => {
+            console.log('REAL CLICK FIRED');
             if (!(await checkBossPassword())) return;
             localStorage.setItem(storageKey(boss.id, ch), String(Date.now()));
             updateChannelCell(cell);
